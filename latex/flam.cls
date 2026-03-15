@@ -37,7 +37,7 @@
 % Custom cover page: institution → author → title → city → year
 \renewcommand{\imprimircapa}{%
   \begin{capa}%
-    \center
+    \centering
     \ABNTEXchapterfont\large\imprimirinstituicao
 
     \ABNTEXchapterfont\large\imprimirautor

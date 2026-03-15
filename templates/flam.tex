@@ -21,7 +21,6 @@
 % ── Packages ──────────────────────────────────────────────────────────────────
 \usepackage{fontspec}                        % XeLaTeX font selection (replaces times + fontenc + inputenc)
 \setmainfont{Times New Roman}                % Installed via ttf-mscorefonts-installer in Docker
-\usepackage[brazil]{babel}                   % Portuguese hyphenation and labels
 \usepackage[brazilian,hyperpageref]{backref} % Back-references in bibliography
 \usepackage[alf]{abntex2cite}                % ABNT citation style (author-date)
 \usepackage{indentfirst}                     % Indent first paragraph of each section
@@ -29,8 +28,6 @@
 \usepackage{booktabs}                        % Better tables (\toprule, \midrule, \bottomrule)
 \usepackage{longtable}                       % Multi-page tables (Pandoc outputs these)
 \usepackage{array}                           % Extended column types
-\usepackage{color}                           % Color support
-\usepackage{hyperref}                        % PDF metadata and links
 
 % ── backref strings (Portuguese) ──────────────────────────────────────────────
 \renewcommand{\backrefpagesname}{Citado na(s) página(s):~}
@@ -48,7 +45,7 @@
 \hypersetup{
   pdftitle={$title$},
   pdfauthor={$author$},
-  hidelinks=true,
+  hidelinks,
   bookmarksdepth=4
 }
 
@@ -63,8 +60,6 @@ $if(course)$
 \tipotrabalho{$course$}
 \preambulo{Trabalho da disciplina de $course$$if(professor)$, solicitado pelo $professor$$endif$.}
 $endif$
-
-\makeindex
 
 % ── Document body ─────────────────────────────────────────────────────────────
 \begin{document}
@@ -85,7 +80,6 @@ $endif$
 $body$
 
 % ── Bibliography ──────────────────────────────────────────────────────────────
-\bibliographystyle{abntex2-alf}
 \bibliography{refs}
 
 \end{document}
