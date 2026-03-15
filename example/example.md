@@ -1,19 +1,19 @@
 ---
-title: "Análise do Pensamento de Tomás de Aquino"
-author: "João Silva"
-institution: "Faculdade Latino-Americana de Música"
+title: "ANÁLISE DO PENSAMENTO DE TOMÁS DE AQUINO"
+author: "JOAO SILVA"
+institution: "FLAM - FACULDADE LATINO AMERICANA"
 course: "Filosofia Medieval"
 professor: "Prof. Dr. Carlos Santos"
-city: "São Paulo"
+city: "ARUJÁ - SP"
 year: "2026"
 ---
 
-## Introdução
+# Introdução
 
 Este artigo analisa o pensamento filosófico de Tomás de Aquino, com ênfase
 na síntese entre razão e fé [@aquino1265].
 
-## Desenvolvimento
+# Desenvolvimento
 
 A filosofia escolástica produziu grandes sínteses [@gilson1944]. Conforme
 apresentado na tabela abaixo:
@@ -23,8 +23,8 @@ apresentado na tabela abaixo:
 | Tomás de Aquino | 1225–1274   | Síntese aristotélico-cristã   |
 | Agostinho       | 354–430     | Filosofia neoplatônica cristã |
 
-## Conclusão
+# Conclusão
 
 A obra de Aquino permanece relevante para a filosofia contemporânea.
 
-## Referências
+# Referências
