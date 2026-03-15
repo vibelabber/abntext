@@ -19,6 +19,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     texlive-lang-portuguese \
     texlive-fonts-recommended \
     texlive-latex-extra \
+    texlive-publishers \
     ttf-mscorefonts-installer \
     fontconfig \
     && fc-cache -fv \
