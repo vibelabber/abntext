@@ -56,7 +56,6 @@
 $if(institution)$\instituicao{$institution$}$endif$
 $if(city)$\local{$city$}$endif$
 $if(year)$\data{$year$}$endif$
-$if(professor)$\orientador{$professor$}$endif$
 $if(course)$
 \tipotrabalho{$course$}
 \preambulo{Trabalho da disciplina de $course$$if(professor)$, solicitado pelo $professor$$endif$.}
@@ -81,6 +80,8 @@ $endif$
 $body$
 
 % ── Bibliography ──────────────────────────────────────────────────────────────
+\renewcommand{\bibname}{REFERÊNCIAS}
+\clearpage
 \bibliography{refs}
 
 \end{document}
