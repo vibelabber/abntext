@@ -21,4 +21,8 @@ describe('generateCiteKey', () => {
   it('trims whitespace from author name', () => {
     expect(generateCiteKey('  Silva, João  ', '2023')).toBe('Silva2023')
   })
+
+  it('trims whitespace from year', () => {
+    expect(generateCiteKey('Silva, João', '  2023  ')).toBe('Silva2023')
+  })
 })

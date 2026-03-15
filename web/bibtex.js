@@ -15,5 +15,5 @@ export function generateCiteKey(author, year) {
   const lastName = firstAuthor.includes(',')
     ? firstAuthor.split(',')[0].trim()
     : firstAuthor.split(' ').pop()
-  return `${lastName}${year}`
+  return `${lastName}${year.trim()}`
 }
