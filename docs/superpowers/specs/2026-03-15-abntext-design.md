@@ -83,6 +83,7 @@ xelatex document.tex   # third pass — resolves page numbers and stabilises TOC
   - `texlive-lang-portuguese`
   - `texlive-fonts-recommended`
   - `texlive-latex-extra` (includes abntex2)
+  - `fonts-texgyre` (provides TeX Gyre Termes — the Times New Roman equivalent used by the FLAM template via fontspec)
   - (no separate `bibtex` package needed — the `bibtex` binary ships inside `texlive-binaries`, which is already a dependency of `texlive-xetex`; no additional `apt-get install` entry required)
 
 ---
