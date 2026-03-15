@@ -3,12 +3,15 @@ from pathlib import Path
 
 from fastapi import FastAPI, File, UploadFile
 from fastapi.responses import HTMLResponse, Response
+from fastapi.staticfiles import StaticFiles
 
 from abntext import pipeline
 
 app = FastAPI(title="ABNText")
 
 _WEB_DIR = Path(__file__).parent.parent / "web"
+
+app.mount("/static", StaticFiles(directory=_WEB_DIR), name="static")
 
 
 @app.get("/", response_class=HTMLResponse)
