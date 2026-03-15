@@ -28,9 +28,7 @@ def convert(md_path: Path, bib_path: Path | None, output_path: Path) -> None:
         pdf_path = tmpdir / "document.pdf"
 
         # Copy LaTeX class into cwd so xelatex finds it by name.
-        cls_src = _LATEX_DIR / "flam.cls"
-        if cls_src.exists():
-            shutil.copy(cls_src, tmpdir / "flam.cls")
+        shutil.copy(_LATEX_DIR / "flam.cls", tmpdir / "flam.cls")
 
         # BibTeX expects refs.bib (hardcoded in the template's \bibliography{refs}).
         if bib_path is not None:

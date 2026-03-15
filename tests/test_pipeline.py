@@ -1,3 +1,4 @@
+import shutil as _real_shutil
 from pathlib import Path
 from unittest.mock import MagicMock, call, patch
 
@@ -36,6 +37,19 @@ def _fake_subprocess(cmd, **kwargs):
     if cmd[0] == "xelatex":
         (Path(kwargs["cwd"]) / "document.pdf").write_bytes(b"%PDF-1.4")
     return MagicMock(returncode=0, stderr="", stdout="")
+
+
+_original_copy = _real_shutil.copy
+
+
+@pytest.fixture(autouse=True)
+def skip_cls_copy(monkeypatch):
+    """Skip copying flam.cls in tests since the file doesn't exist yet (Task 3)."""
+    def patched_copy(src, dst):
+        if str(src).endswith("flam.cls"):
+            return
+        return _original_copy(src, dst)
+    monkeypatch.setattr("abntext.pipeline.shutil.copy", patched_copy)
 
 
 class TestConvert:
@@ -151,3 +165,26 @@ class TestConvert:
             mock.return_value = MagicMock(returncode=1, stderr="xelatex: ! error")
             with pytest.raises(RuntimeError):
                 convert(md, None, out)
+
+    def test_flam_cls_is_copied_into_tmpdir(self, tmp_path, monkeypatch):
+        md = tmp_path / "input.md"
+        md.write_text("---\ntitle: T\nauthor: A\n---\n\nBody.\n")
+        out = tmp_path / "out.pdf"
+
+        copied_srcs = []
+
+        def capture_copy(src, dst):
+            copied_srcs.append(str(src))
+            if str(src).endswith("flam.cls"):
+                return  # don't actually copy (file doesn't exist)
+            _original_copy(src, dst)
+
+        # Override the autouse fixture's patch with our capturing version.
+        monkeypatch.setattr("abntext.pipeline.shutil.copy", capture_copy)
+
+        with patch("abntext.pipeline.subprocess.run", side_effect=_fake_subprocess):
+            convert(md, None, out)
+
+        assert any("flam.cls" in s for s in copied_srcs), (
+            f"flam.cls not copied, got: {copied_srcs}"
+        )
