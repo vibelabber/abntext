@@ -62,7 +62,7 @@ The conversion pipeline (`pipeline.py`) is a single Python module called by both
 xelatex document.tex   # first pass — writes .aux with \citation{} entries
 bibtex document.aux    # reads .aux + .bib, produces .bbl with formatted references
 xelatex document.tex   # second pass — inserts formatted bibliography from .bbl
-xelatex document.tex   # third pass — resolves page numbers for cross-references
+xelatex document.tex   # third pass — resolves page numbers and stabilises TOC
 ```
 
 ### Key OSS dependencies
@@ -83,7 +83,7 @@ xelatex document.tex   # third pass — resolves page numbers for cross-referenc
   - `texlive-lang-portuguese`
   - `texlive-fonts-recommended`
   - `texlive-latex-extra` (includes abntex2)
-  - `bibtex` (resolves citations from `.bib` via abntex2cite during the compile sequence; abntex2cite uses the traditional BibTeX engine, not biber/biblatex)
+  - (no separate `bibtex` package needed — the `bibtex` binary ships inside `texlive-binaries`, which is already a dependency of `texlive-xetex`; no additional `apt-get install` entry required)
 
 ---
 
@@ -140,7 +140,7 @@ year: "2026"
 Neste artigo...[@aquino1265]
 ```
 
-The `.bib` file is uploaded alongside the `.md` and written to the same temp directory as the generated `.tex` file. The Pandoc template includes `\bibliography{refs}` so BibTeX can locate it by name. Pandoc is invoked with `--natbib` only; `--bibliography` is not passed, as citeproc is not active and there is nothing for Pandoc to look up. Citations remain as `\cite{key}` in the `.tex` output and are resolved by abntex2cite during the BibTeX compile step.
+The `.bib` file is uploaded alongside the `.md` and written to the temp directory as `refs.bib` (regardless of the original upload filename). The Pandoc template hardcodes `\bibliography{refs}`, so BibTeX will find the file by that fixed name. Pandoc is invoked with `--natbib` only; `--bibliography` is not passed, as citeproc is not active. Citations remain as `\cite{key}` in the `.tex` output and are resolved by abntex2cite during the BibTeX compile step.
 
 ---
 
@@ -165,7 +165,7 @@ The `.bib` file is uploaded alongside the `.md` and written to the same temp dir
 - Body: relevant excerpt from Pandoc or xelatex stderr
 
 **Validation:**
-- If `md_file` is missing: HTTP 422 with message "Markdown file is required"
+- If `md_file` is missing: FastAPI's built-in `multipart/form-data` validation raises HTTP 422 automatically before the route handler runs; no duplicate check needed in `main.py`
 - If `bib_file` is absent but the document contains `[@key]` citations: BibTeX will not find the `.bib` file and will exit with a non-zero code, which the pipeline treats as a hard error (HTTP 422). The error message will identify the missing bibliography.
 - No file-type enforcement beyond the field names; malformed files will fail at the Pandoc/xelatex step and surface as HTTP 422
 
@@ -198,7 +198,7 @@ usage: cli.py convert <md_file> [--bib <bib_file>] [--output <output_file>]
 | `convert` | Yes | — | Subcommand (literal word, dispatched by argparse) |
 | `md_file` | Yes | — | Path to the `.md` file, relative to `/data/` inside the container |
 | `--bib` | No | none | Path to the `.bib` file, relative to `/data/` |
-| `--output` | No | `<md_file stem>.pdf` | Output PDF filename, written to `/data/` |
+| `--output` | No | `/data/<md_file stem>.pdf` | Output PDF path; written to `/data/` in the container (i.e., the current directory on the host) |
 
 **Usage (from the host, via the shell script):**
 ```bash
