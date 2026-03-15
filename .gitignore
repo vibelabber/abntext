@@ -17,3 +17,6 @@ htmlcov/
 
 # Superpowers brainstorm sessions
 .superpowers/
+
+# Node
+node_modules/
