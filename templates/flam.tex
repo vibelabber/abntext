@@ -1,0 +1,91 @@
+% flam.tex — Pandoc LaTeX template for ABNText
+% Maps YAML frontmatter fields to abntex2 macros.
+% Used with: pandoc input.md --natbib --template flam.tex -o output.tex
+%
+% Requires XeLaTeX. Compile sequence:
+%   xelatex → bibtex → xelatex → xelatex
+
+\documentclass[
+  article,            % academic article mode
+  12pt,
+  a4paper,
+  chapter=TITLE,
+  section=TITLE,
+  oneside,
+  english,            % additional hyphenation languages
+  french,
+  spanish,
+  brazil,             % primary language (must be last)
+]{flam}
+
+% ── Packages ──────────────────────────────────────────────────────────────────
+\usepackage{fontspec}                        % XeLaTeX font selection (replaces times + fontenc + inputenc)
+\setmainfont{Times New Roman}                % Installed via ttf-mscorefonts-installer in Docker
+\usepackage[brazil]{babel}                   % Portuguese hyphenation and labels
+\usepackage[brazilian,hyperpageref]{backref} % Back-references in bibliography
+\usepackage[alf]{abntex2cite}                % ABNT citation style (author-date)
+\usepackage{indentfirst}                     % Indent first paragraph of each section
+\usepackage{microtype}                       % Better text justification
+\usepackage{booktabs}                        % Better tables (\toprule, \midrule, \bottomrule)
+\usepackage{longtable}                       % Multi-page tables (Pandoc outputs these)
+\usepackage{array}                           % Extended column types
+\usepackage{color}                           % Color support
+\usepackage{hyperref}                        % PDF metadata and links
+
+% ── backref strings (Portuguese) ──────────────────────────────────────────────
+\renewcommand{\backrefpagesname}{Citado na(s) página(s):~}
+\renewcommand{\backref}{}
+\renewcommand*{\backrefalt}[4]{%
+  \ifcase #1%
+    Nenhuma citação no texto.%
+  \or
+    Citado na página #2.%
+  \else
+    Citado #1 vezes nas páginas #2.%
+  \fi}
+
+% ── PDF metadata ──────────────────────────────────────────────────────────────
+\hypersetup{
+  pdftitle={$title$},
+  pdfauthor={$author$},
+  hidelinks=true,
+  bookmarksdepth=4
+}
+
+% ── Document metadata (from YAML frontmatter) ─────────────────────────────────
+\titulo{$title$}
+\autor{$author$}
+$if(institution)$\instituicao{$institution$}$endif$
+$if(city)$\local{$city$}$endif$
+$if(year)$\data{$year$}$endif$
+$if(professor)$\orientador{$professor$}$endif$
+$if(course)$
+\tipotrabalho{$course$}
+\preambulo{Trabalho da disciplina de $course$$if(professor)$, solicitado pelo $professor$$endif$.}
+$endif$
+
+\makeindex
+
+% ── Document body ─────────────────────────────────────────────────────────────
+\begin{document}
+
+\citeoption{abnt-full-initials=yes}
+\selectlanguage{brazil}
+
+\imprimircapa
+\imprimirfolhaderosto
+
+\textual
+\pagestyle{simple}
+
+\pdfbookmark[0]{\contentsname}{toc}
+\tableofcontents*
+\cleardoublepage
+
+$body$
+
+% ── Bibliography ──────────────────────────────────────────────────────────────
+\bibliographystyle{abntex2-alf}
+\bibliography{refs}
+
+\end{document}
