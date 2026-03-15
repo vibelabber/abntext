@@ -12,6 +12,7 @@ RUN echo "ttf-mscorefonts-installer msttcorefonts/accepted-mscorefonts-eula sele
 # Install system dependencies.
 # ttf-mscorefonts-installer downloads Times New Roman (and other MS fonts)
 # from SourceForge during the build — requires internet access.
+# fontconfig is installed explicitly so fc-cache is available on PATH.
 RUN apt-get update && apt-get install -y --no-install-recommends \
     pandoc \
     texlive-xetex \
@@ -19,6 +20,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     texlive-fonts-recommended \
     texlive-latex-extra \
     ttf-mscorefonts-installer \
+    fontconfig \
     && fc-cache -fv \
     && rm -rf /var/lib/apt/lists/*
 
