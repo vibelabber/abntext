@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { generateCiteKey, serializeEntry } from '../../web/bibtex.js'
+import { generateCiteKey, serializeEntry, serializeBibFile } from '../../web/bibtex.js'
 
 describe('generateCiteKey', () => {
   it('extracts last name before comma and appends year', () => {
@@ -72,5 +72,37 @@ describe('serializeEntry', () => {
 
   it('throws for unknown entry types', () => {
     expect(() => serializeEntry({ type: 'unknown' })).toThrow('Unknown entry type: unknown')
+  })
+})
+
+describe('serializeBibFile', () => {
+  const bookEntry = {
+    type: 'book',
+    author: 'Silva, João',
+    title: 'Livro',
+    publisher: 'Editora',
+    address: 'SP',
+    year: '2023',
+  }
+  const onlineEntry = {
+    type: 'online',
+    author: 'Souza, Maria',
+    title: 'Artigo',
+    url: 'https://exemplo.com',
+    urldate: '2022-05-10',
+    year: '2022',
+  }
+
+  it('returns empty string for empty array', () => {
+    expect(serializeBibFile([])).toBe('')
+  })
+
+  it('returns single entry string unchanged', () => {
+    expect(serializeBibFile([bookEntry])).toBe(serializeEntry(bookEntry))
+  })
+
+  it('joins multiple entries with a blank line between them', () => {
+    const result = serializeBibFile([bookEntry, onlineEntry])
+    expect(result).toBe(serializeEntry(bookEntry) + '\n\n' + serializeEntry(onlineEntry))
   })
 })

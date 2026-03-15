@@ -56,3 +56,14 @@ export function serializeEntry(entry) {
     ].join('\n')
   }
 }
+
+/**
+ * Serializes an array of entry objects to a full .bib file string.
+ * Entries are separated by a blank line.
+ *
+ * @param {object[]} entries
+ * @returns {string}
+ */
+export function serializeBibFile(entries) {
+  return entries.map(serializeEntry).join('\n\n')
+}
