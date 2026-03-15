@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# ABNText CLI — converts Markdown to ABNT-compliant PDF via Docker.
+#
+# Usage:
+#   bin/abntext convert paper.md
+#   bin/abntext convert paper.md --bib refs.bib
+#   bin/abntext convert paper.md --bib refs.bib --output paper.pdf
+#
+# Files are resolved relative to the current directory, which is mounted
+# as /data inside the container.
+set -euo pipefail
+
+docker run --rm \
+  -v "$(pwd):/data" \
+  abntext \
+  python -m abntext.cli convert "$@"
