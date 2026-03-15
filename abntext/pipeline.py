@@ -58,9 +58,10 @@ def convert(md_path: Path, bib_path: Path | None, output_path: Path) -> None:
 
 
 def _run(cmd: list[str], cwd: Path) -> None:
-    """Run a subprocess; raise RuntimeError with stderr if it exits non-zero."""
+    """Run a subprocess; raise RuntimeError with output if it exits non-zero."""
     result = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True)
     if result.returncode != 0:
+        output = (result.stdout + result.stderr).strip()
         raise RuntimeError(
-            f"Command '{cmd[0]}' failed (exit {result.returncode}):\n{result.stderr}"
+            f"Command '{cmd[0]}' failed (exit {result.returncode}):\n{output}"
         )
