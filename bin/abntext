@@ -13,4 +13,4 @@ set -euo pipefail
 docker run --rm \
   -v "$(pwd):/data" \
   abntext \
-  python -m abntext.cli convert "$@"
+  python -m abntext.cli "$@"

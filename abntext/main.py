@@ -1,7 +1,7 @@
 import tempfile
 from pathlib import Path
 
-from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi import FastAPI, File, UploadFile
 from fastapi.responses import HTMLResponse, Response
 
 from abntext import pipeline
@@ -37,7 +37,11 @@ async def convert(
         try:
             pipeline.convert(md_path, bib_path, pdf_path)
         except RuntimeError as exc:
-            raise HTTPException(status_code=422, detail=str(exc))
+            return Response(
+                content=str(exc),
+                status_code=422,
+                media_type="text/plain",
+            )
 
         pdf_bytes = pdf_path.read_bytes()
 
