@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { generateCiteKey } from '../../web/bibtex.js'
+import { generateCiteKey, serializeEntry } from '../../web/bibtex.js'
 
 describe('generateCiteKey', () => {
   it('extracts last name before comma and appends year', () => {
@@ -24,5 +24,53 @@ describe('generateCiteKey', () => {
 
   it('trims whitespace from year', () => {
     expect(generateCiteKey('Silva, João', '  2023  ')).toBe('Silva2023')
+  })
+})
+
+describe('serializeEntry', () => {
+  it('serializes a @book entry with correct field order and braces', () => {
+    const entry = {
+      type: 'book',
+      author: 'Silva, João',
+      title: 'Título do Livro',
+      publisher: 'Editora Exemplo',
+      address: 'São Paulo',
+      year: '2023',
+    }
+    const expected = [
+      '@book{Silva2023,',
+      '  author    = {Silva, João},',
+      '  title     = {Título do Livro},',
+      '  publisher = {Editora Exemplo},',
+      '  address   = {São Paulo},',
+      '  year      = {2023},',
+      '}',
+    ].join('\n')
+    expect(serializeEntry(entry)).toBe(expected)
+  })
+
+  it('serializes an @online entry with correct field order and braces', () => {
+    const entry = {
+      type: 'online',
+      author: 'Souza, Maria',
+      title: 'Título do Artigo Online',
+      url: 'https://exemplo.com',
+      urldate: '2022-05-10',
+      year: '2022',
+    }
+    const expected = [
+      '@online{Souza2022,',
+      '  author  = {Souza, Maria},',
+      '  title   = {Título do Artigo Online},',
+      '  url     = {https://exemplo.com},',
+      '  urldate = {2022-05-10},',
+      '  year    = {2022},',
+      '}',
+    ].join('\n')
+    expect(serializeEntry(entry)).toBe(expected)
+  })
+
+  it('throws for unknown entry types', () => {
+    expect(() => serializeEntry({ type: 'unknown' })).toThrow('Unknown entry type: unknown')
   })
 })

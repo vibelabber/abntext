@@ -17,3 +17,42 @@ export function generateCiteKey(author, year) {
     : firstAuthor.split(' ').pop()
   return `${lastName}${year.trim()}`
 }
+
+/**
+ * Serializes a single BibTeX entry object to a BibTeX string block.
+ * Supported types: 'book', 'online'.
+ *
+ * @param {{ type: string, author: string, title: string, year: string, [key: string]: string }} entry
+ * @returns {string}
+ */
+export function serializeEntry(entry) {
+  if (entry.type !== 'book' && entry.type !== 'online') {
+    throw new Error(`Unknown entry type: ${entry.type}`)
+  }
+
+  const key = generateCiteKey(entry.author, entry.year)
+
+  if (entry.type === 'book') {
+    return [
+      `@book{${key},`,
+      `  author    = {${entry.author}},`,
+      `  title     = {${entry.title}},`,
+      `  publisher = {${entry.publisher}},`,
+      `  address   = {${entry.address}},`,
+      `  year      = {${entry.year}},`,
+      `}`,
+    ].join('\n')
+  }
+
+  if (entry.type === 'online') {
+    return [
+      `@online{${key},`,
+      `  author  = {${entry.author}},`,
+      `  title   = {${entry.title}},`,
+      `  url     = {${entry.url}},`,
+      `  urldate = {${entry.urldate}},`,
+      `  year    = {${entry.year}},`,
+      `}`,
+    ].join('\n')
+  }
+}
