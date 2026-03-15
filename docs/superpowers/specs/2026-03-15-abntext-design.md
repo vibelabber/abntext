@@ -59,10 +59,10 @@ The conversion pipeline (`pipeline.py`) is a single Python module called by both
 
 **Compile sequence:**
 ```
-xelatex document.tex   # first pass — writes .aux
-bibtex document.aux    # resolves citations from .bib via abntex2cite
-xelatex document.tex   # second pass — inserts bibliography
-xelatex document.tex   # third pass — resolves cross-references
+xelatex document.tex   # first pass — writes .aux with \citation{} entries
+bibtex document.aux    # reads .aux + .bib, produces .bbl with formatted references
+xelatex document.tex   # second pass — inserts formatted bibliography from .bbl
+xelatex document.tex   # third pass — resolves page numbers for cross-references
 ```
 
 ### Key OSS dependencies
@@ -70,6 +70,7 @@ xelatex document.tex   # third pass — resolves cross-references
 |------|------|
 | Pandoc | Markdown → LaTeX conversion (`--natbib` passes citations through as `\cite{}`) |
 | XeLaTeX + abntex2 + abntex2cite | LaTeX → PDF compilation with ABNT styles and citation formatting |
+| BibTeX | Citation resolution — reads `.bib` and generates formatted references via abntex2cite `.bst` style files |
 | FastAPI | Web server and internal CLI host |
 | Docker | Runtime environment bundling all dependencies |
 
@@ -139,7 +140,7 @@ year: "2026"
 Neste artigo...[@aquino1265]
 ```
 
-The `.bib` file is uploaded alongside the `.md`. Pandoc passes it via `--bibliography` so it knows about the entries, but with `--natbib` it does not resolve citations — they are passed through as `\cite{key}` for abntex2cite to resolve during the BibTeX compile step.
+The `.bib` file is uploaded alongside the `.md` and written to the same temp directory as the generated `.tex` file. The Pandoc template includes `\bibliography{refs}` so BibTeX can locate it by name. Pandoc is invoked with `--natbib` only; `--bibliography` is not passed, as citeproc is not active and there is nothing for Pandoc to look up. Citations remain as `\cite{key}` in the `.tex` output and are resolved by abntex2cite during the BibTeX compile step.
 
 ---
 
@@ -152,7 +153,7 @@ The `.bib` file is uploaded alongside the `.md`. Pandoc passes it via `--bibliog
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `md_file` | file | Yes | The Markdown source document |
-| `bib_file` | file | No | BibTeX bibliography file |
+| `bib_file` | file | No* | BibTeX bibliography file (* required if the document contains `[@key]` citations) |
 
 **Success response:**
 - `Content-Type: application/pdf`
@@ -165,7 +166,7 @@ The `.bib` file is uploaded alongside the `.md`. Pandoc passes it via `--bibliog
 
 **Validation:**
 - If `md_file` is missing: HTTP 422 with message "Markdown file is required"
-- If `bib_file` is absent but the document contains `[@key]` citations: BibTeX will fail to resolve references and xelatex will render them as `[?]`; the server will not treat this as a hard error but the output will clearly show unresolved citations
+- If `bib_file` is absent but the document contains `[@key]` citations: BibTeX will not find the `.bib` file and will exit with a non-zero code, which the pipeline treats as a hard error (HTTP 422). The error message will identify the missing bibliography.
 - No file-type enforcement beyond the field names; malformed files will fail at the Pandoc/xelatex step and surface as HTTP 422
 
 The form is served statically at `GET /` from `web/index.html`.
