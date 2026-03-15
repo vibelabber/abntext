@@ -30,6 +30,70 @@
     button:disabled { background: #93b4f0; cursor: not-allowed; }
     #status { margin-top: 1rem; font-size: 0.95rem; }
     #error { color: #c00; white-space: pre-wrap; font-family: monospace; font-size: 0.85rem; }
+    .builder-toggle {
+      background: none;
+      border: none;
+      color: #1a56db;
+      cursor: pointer;
+      font-size: 0.9rem;
+      padding: 0;
+      margin-bottom: 0.5rem;
+    }
+    .builder-toggle:disabled { color: #93b4f0; cursor: not-allowed; }
+    #builder-body { border: 1px dashed #93b4f0; border-radius: 4px; padding: 1rem; margin-top: 0.5rem; }
+    #entry-list { list-style: none; padding: 0; margin: 1rem 0 0; }
+    #entry-list li {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.4rem 0.5rem;
+      background: #f5f7fa;
+      border-radius: 4px;
+      margin-bottom: 0.4rem;
+      font-size: 0.85rem;
+    }
+    .entry-info { display: flex; gap: 0.5rem; align-items: center; }
+    .entry-key { font-family: monospace; color: #1a56db; font-size: 0.8rem; }
+    .entry-type-tag {
+      font-size: 0.7rem;
+      background: #e8edf5;
+      color: #555;
+      padding: 1px 5px;
+      border-radius: 3px;
+    }
+    .remove-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #999;
+      font-size: 1rem;
+      line-height: 1;
+      padding: 0 2px;
+    }
+    .remove-btn:hover { color: #c00; }
+    #action-bar { display: flex; gap: 0.75rem; align-items: center; margin-top: 1rem; flex-wrap: wrap; }
+    .use-built-btn {
+      background: none;
+      border: 1px solid #1a56db;
+      color: #1a56db;
+      padding: 0.35rem 0.9rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.875rem;
+    }
+    .use-built-btn.active { background: #1a56db; color: #fff; }
+    #bib-active-note { font-size: 0.8rem; color: #555; font-style: italic; margin-top: 0.25rem; display: none; }
+    .field-group { margin-top: 0.75rem; }
+    .field-group .field { margin-bottom: 0.75rem; }
+    input[type="text"], input[type="url"], select {
+      display: block;
+      width: 100%;
+      padding: 0.4rem 0.6rem;
+      font-size: 0.9rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
   </style>
 </head>
 <body>
@@ -45,7 +109,72 @@
       <label for="bib_file">Arquivo BibTeX (opcional)</label>
       <input type="file" id="bib_file" name="bib_file" accept=".bib">
       <p class="hint">Necessário se o documento contiver citações <code>[@chave]</code>.</p>
+      <p id="bib-active-note">Será usado o BibTeX gerado abaixo.</p>
     </div>
+    <div id="bib-builder" class="field">
+      <button type="button" class="builder-toggle" id="builder-toggle">▶ Não tem um .bib? Crie um aqui</button>
+      <div id="builder-body" hidden>
+
+        <div class="field">
+          <label for="entry-type">Tipo</label>
+          <select id="entry-type">
+            <option value="book">Livro (@book)</option>
+            <option value="online">Online (@online)</option>
+          </select>
+        </div>
+
+        <div class="field-group">
+          <div class="field">
+            <label for="entry-author">Autor <span style="color:#c00">*</span></label>
+            <input type="text" id="entry-author" placeholder="Sobrenome, Nome (ex: Silva, João)">
+            <p class="hint">Use formato: Sobrenome, Nome. Múltiplos autores separados por " and ".</p>
+          </div>
+          <div class="field">
+            <label for="entry-title">Título <span style="color:#c00">*</span></label>
+            <input type="text" id="entry-title">
+          </div>
+          <div class="field">
+            <label for="entry-year">Ano <span style="color:#c00">*</span></label>
+            <input type="text" id="entry-year" placeholder="2023">
+          </div>
+        </div>
+
+        <!-- @book-only fields -->
+        <div class="field-group" id="book-fields">
+          <div class="field">
+            <label for="entry-publisher">Editora <span style="color:#c00">*</span></label>
+            <input type="text" id="entry-publisher">
+          </div>
+          <div class="field">
+            <label for="entry-address">Cidade <span style="color:#c00">*</span></label>
+            <input type="text" id="entry-address">
+          </div>
+        </div>
+
+        <!-- @online-only fields -->
+        <div class="field-group" id="online-fields" hidden>
+          <div class="field">
+            <label for="entry-url">URL <span style="color:#c00">*</span></label>
+            <input type="url" id="entry-url" placeholder="https://exemplo.com">
+          </div>
+          <div class="field">
+            <label for="entry-urldate">Data de acesso (YYYY-MM-DD) <span style="color:#c00">*</span></label>
+            <input type="text" id="entry-urldate" placeholder="2023-06-15">
+          </div>
+        </div>
+
+        <button type="button" id="add-entry-btn">Adicionar referência</button>
+
+        <ul id="entry-list" hidden></ul>
+
+        <div id="action-bar" hidden>
+          <button type="button" id="download-bib-btn">Baixar .bib</button>
+          <button type="button" class="use-built-btn" id="use-built-btn">Usar este BibTeX</button>
+        </div>
+
+      </div>
+    </div>
+
     <button type="submit" id="btn">Converter e Baixar PDF</button>
   </form>
 
