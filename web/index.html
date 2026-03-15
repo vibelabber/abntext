@@ -181,43 +181,201 @@
   <div id="status"></div>
   <pre id="error"></pre>
 
-  <script>
-    const form = document.getElementById('form');
-    const btn = document.getElementById('btn');
-    const status = document.getElementById('status');
-    const errorBox = document.getElementById('error');
+  <script type="module">
+    import { generateCiteKey, serializeBibFile } from '/static/bibtex.js'
 
+    // ── State ──────────────────────────────────────────────────────────────
+    const state = {
+      entries: [],
+      useBuilt: false,
+    }
+
+    // ── DOM refs ───────────────────────────────────────────────────────────
+    const form          = document.getElementById('form')
+    const btn           = document.getElementById('btn')
+    const status        = document.getElementById('status')
+    const errorBox      = document.getElementById('error')
+    const bibFileInput  = document.getElementById('bib_file')
+    const bibActiveNote = document.getElementById('bib-active-note')
+
+    const builderToggle = document.getElementById('builder-toggle')
+    const builderBody   = document.getElementById('builder-body')
+    const entryType     = document.getElementById('entry-type')
+    const bookFields    = document.getElementById('book-fields')
+    const onlineFields  = document.getElementById('online-fields')
+    const addEntryBtn   = document.getElementById('add-entry-btn')
+    const entryList     = document.getElementById('entry-list')
+    const actionBar     = document.getElementById('action-bar')
+    const downloadBtn   = document.getElementById('download-bib-btn')
+    const useBuiltBtn   = document.getElementById('use-built-btn')
+
+    // ── Builder toggle ─────────────────────────────────────────────────────
+    builderToggle.addEventListener('click', () => {
+      const isHidden = builderBody.hasAttribute('hidden')
+      if (isHidden) {
+        builderBody.removeAttribute('hidden')
+        builderToggle.textContent = '▼ Não tem um .bib? Crie um aqui'
+      } else {
+        builderBody.setAttribute('hidden', '')
+        builderToggle.textContent = '▶ Não tem um .bib? Crie um aqui'
+      }
+    })
+
+    // ── Type switcher ──────────────────────────────────────────────────────
+    entryType.addEventListener('change', () => {
+      if (entryType.value === 'book') {
+        bookFields.removeAttribute('hidden')
+        onlineFields.setAttribute('hidden', '')
+      } else {
+        bookFields.setAttribute('hidden', '')
+        onlineFields.removeAttribute('hidden')
+      }
+    })
+
+    // ── Add entry ──────────────────────────────────────────────────────────
+    addEntryBtn.addEventListener('click', () => {
+      const author = document.getElementById('entry-author').value.trim()
+      const title  = document.getElementById('entry-title').value.trim()
+      const year   = document.getElementById('entry-year').value.trim()
+
+      if (!author || !title || !year) {
+        alert('Preencha Autor, Título e Ano.')
+        return
+      }
+
+      const type = entryType.value
+      let entry = { type, author, title, year }
+
+      if (type === 'book') {
+        const publisher = document.getElementById('entry-publisher').value.trim()
+        const address   = document.getElementById('entry-address').value.trim()
+        if (!publisher || !address) {
+          alert('Preencha Editora e Cidade.')
+          return
+        }
+        entry = { ...entry, publisher, address }
+      } else {
+        const url     = document.getElementById('entry-url').value.trim()
+        const urldate = document.getElementById('entry-urldate').value.trim()
+        if (!url || !urldate) {
+          alert('Preencha URL e Data de acesso.')
+          return
+        }
+        entry = { ...entry, url, urldate }
+      }
+
+      const wasEmpty = state.entries.length === 0
+      state.entries.push(entry)
+      if (wasEmpty) setUseBuilt(true)
+
+      renderEntryList()
+      clearEntryForm()
+    })
+
+    // ── Render entry list ──────────────────────────────────────────────────
+    function renderEntryList() {
+      entryList.innerHTML = ''
+      state.entries.forEach((entry, idx) => {
+        const key = generateCiteKey(entry.author, entry.year)
+        const li = document.createElement('li')
+        li.innerHTML = `
+          <span class="entry-info">
+            <span class="entry-key">${key}</span>
+            <span>${entry.title}</span>
+            <span class="entry-type-tag">@${entry.type}</span>
+          </span>
+          <button class="remove-btn" data-idx="${idx}" title="Remover">✕</button>
+        `
+        entryList.appendChild(li)
+      })
+
+      const hasEntries = state.entries.length > 0
+      hasEntries ? entryList.removeAttribute('hidden') : entryList.setAttribute('hidden', '')
+      hasEntries ? actionBar.removeAttribute('hidden') : actionBar.setAttribute('hidden', '')
+
+      if (!hasEntries) setUseBuilt(false)
+    }
+
+    // ── Remove entry ───────────────────────────────────────────────────────
+    entryList.addEventListener('click', (e) => {
+      const btn = e.target.closest('.remove-btn')
+      if (!btn) return
+      const idx = parseInt(btn.dataset.idx, 10)
+      state.entries.splice(idx, 1)
+      renderEntryList()
+    })
+
+    // ── useBuilt toggle ────────────────────────────────────────────────────
+    function setUseBuilt(val) {
+      state.useBuilt = val
+      useBuiltBtn.classList.toggle('active', val)
+      bibFileInput.disabled = val
+      bibActiveNote.style.display = val ? 'block' : 'none'
+    }
+
+    useBuiltBtn.addEventListener('click', () => setUseBuilt(!state.useBuilt))
+
+    // ── Download .bib ──────────────────────────────────────────────────────
+    downloadBtn.addEventListener('click', () => {
+      const content = serializeBibFile(state.entries)
+      const blob = new Blob([content], { type: 'text/plain' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'refs.bib'
+      a.click()
+      URL.revokeObjectURL(url)
+    })
+
+    // ── Clear entry form ───────────────────────────────────────────────────
+    function clearEntryForm() {
+      document.getElementById('entry-author').value = ''
+      document.getElementById('entry-title').value  = ''
+      document.getElementById('entry-year').value   = ''
+      document.getElementById('entry-publisher').value = ''
+      document.getElementById('entry-address').value   = ''
+      document.getElementById('entry-url').value     = ''
+      document.getElementById('entry-urldate').value = ''
+    }
+
+    // ── Form submit (conversion) ───────────────────────────────────────────
     form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      btn.disabled = true;
-      status.textContent = 'Convertendo…';
-      errorBox.textContent = '';
+      e.preventDefault()
+      btn.disabled = true
+      status.textContent = 'Convertendo…'
+      errorBox.textContent = ''
 
-      const data = new FormData(form);
+      const data = new FormData(form)
+
+      if (state.useBuilt && state.entries.length > 0) {
+        const content = serializeBibFile(state.entries)
+        const bibFile = new File([content], 'refs.bib', { type: 'text/plain' })
+        data.set('bib_file', bibFile, 'refs.bib')
+      }
 
       try {
-        const res = await fetch('/convert', { method: 'POST', body: data });
+        const res = await fetch('/convert', { method: 'POST', body: data })
         if (res.ok) {
-          const blob = await res.blob();
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = 'output.pdf';
-          a.click();
-          URL.revokeObjectURL(url);
-          status.textContent = 'PDF gerado com sucesso.';
+          const blob = await res.blob()
+          const url = URL.createObjectURL(blob)
+          const a = document.createElement('a')
+          a.href = url
+          a.download = 'output.pdf'
+          a.click()
+          URL.revokeObjectURL(url)
+          status.textContent = 'PDF gerado com sucesso.'
         } else {
-          const text = await res.text();
-          status.textContent = 'Erro na conversão:';
-          errorBox.textContent = text;
+          const text = await res.text()
+          status.textContent = 'Erro na conversão:'
+          errorBox.textContent = text
         }
       } catch (err) {
-        status.textContent = 'Erro de rede.';
-        errorBox.textContent = err.message;
+        status.textContent = 'Erro de rede.'
+        errorBox.textContent = err.message
       } finally {
-        btn.disabled = false;
+        btn.disabled = false
       }
-    });
+    })
   </script>
 </body>
 </html>
