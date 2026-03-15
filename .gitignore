@@ -14,3 +14,6 @@ llm/
 .pytest_cache/
 .coverage
 htmlcov/
+
+# Superpowers brainstorm sessions
+.superpowers/
