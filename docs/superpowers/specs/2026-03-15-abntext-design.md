@@ -17,7 +17,7 @@ Two interfaces are provided:
 - Headings (map to ABNT sections)
 - Lists
 - Tables (GFM syntax)
-- Citations via `[@key]` syntax (Pandoc citeproc + ABNT CSL)
+- Citations via `[@key]` syntax (passed through as `\cite{key}` via Pandoc `--natbib`, resolved by abntex2cite)
 - Bibliography via an accompanying `.bib` (BibTeX) file
 - No figure support in MVP
 
@@ -38,10 +38,9 @@ Student uploads .md + (optional) .bib
     Conversion pipeline (pipeline.py — shared)
          ├── Write files to temp dir
          ├── Pandoc: .md → .tex
-         │     └── --citeproc --bibliography=refs.bib
-         │     └── --csl=abnt.csl (bundled in image at /app/csl/abnt.csl)
+         │     └── --natbib (passes [@key] through as \cite{key}; no citeproc)
          │     └── --template=flam.tex
-         └── xelatex (run twice for citations/TOC)
+         └── xelatex → bibtex → xelatex → xelatex (4 steps for abntex2cite)
               └── returns PDF path
          │
     Web:  stream PDF as HTTP response
@@ -50,17 +49,27 @@ Student uploads .md + (optional) .bib
     CLI:  write PDF to /data/<output> in container
 ```
 
-The conversion pipeline (`pipeline.py`) is a single Python module called by both the web handler and the internal CLI entrypoint. It accepts file paths, shells out to Pandoc then xelatex (twice), and returns the path to the produced PDF. Temp directories are always cleaned up via `finally` blocks.
+The conversion pipeline (`pipeline.py`) is a single Python module called by both the web handler and the internal CLI entrypoint. It accepts file paths, shells out to Pandoc then runs the 4-step LaTeX sequence, and returns the path to the produced PDF. Temp directories are always cleaned up via `finally` blocks.
 
 **LaTeX engine:** XeLaTeX. Chosen for native UTF-8 support, which is required for Portuguese documents with accented characters. No `inputenc`/`fontenc` boilerplate needed.
 
-**Citation engine:** Pandoc citeproc with a bundled ABNT CSL file (`csl/abnt.csl` inside the image). Citations are resolved entirely by Pandoc before LaTeX is invoked; no `abntex2cite` LaTeX package is used.
+**Citation engine:** abntex2cite via Pandoc `--natbib`. Pandoc passes `[@key]` references through as `\cite{key}` LaTeX commands without resolving them. The LaTeX template includes `\usepackage[alf]{abntex2cite}` and `\bibliographystyle{abntex2-alf}`. BibTeX resolves citations during the compile sequence. This matches the workflow used by the example FLAM document and produces citations identical to native abntex2 documents.
+
+**Why not Pandoc citeproc + ABNT CSL:** The canonical ABNT CSL file (`associacao-brasileira-de-normas-tecnicas.csl`) only claims NBR 6023:2002 compliance, not 2018. The 2018 revision changed reference formatting rules significantly (electronic sources, DOI placement, etc.). There is an open, unresolved issue in the CSL styles repository for this gap. abntex2cite, which ships with abntex2, is the de facto standard in Brazilian academia and handles all ABNT edge cases.
+
+**Compile sequence:**
+```
+xelatex document.tex   # first pass — writes .aux
+bibtex document.aux    # resolves citations from .bib via abntex2cite
+xelatex document.tex   # second pass — inserts bibliography
+xelatex document.tex   # third pass — resolves cross-references
+```
 
 ### Key OSS dependencies
 | Tool | Role |
 |------|------|
-| Pandoc | Markdown → LaTeX conversion, citeproc citation processing with ABNT CSL |
-| XeLaTeX (TeX Live) + abntex2 | LaTeX → PDF compilation with ABNT styles |
+| Pandoc | Markdown → LaTeX conversion (`--natbib` passes citations through as `\cite{}`) |
+| XeLaTeX + abntex2 + abntex2cite | LaTeX → PDF compilation with ABNT styles and citation formatting |
 | FastAPI | Web server and internal CLI host |
 | Docker | Runtime environment bundling all dependencies |
 
@@ -73,7 +82,7 @@ The conversion pipeline (`pipeline.py`) is a single Python module called by both
   - `texlive-lang-portuguese`
   - `texlive-fonts-recommended`
   - `texlive-latex-extra` (includes abntex2)
-  - (no biber — citations are resolved entirely by Pandoc citeproc before xelatex is invoked; xelatex never processes bibliography data)
+  - `bibtex` (resolves citations from `.bib` via abntex2cite during the compile sequence; abntex2cite uses the traditional BibTeX engine, not biber/biblatex)
 
 ---
 
@@ -96,9 +105,6 @@ abntext/
 │
 ├── templates/
 │   └── flam.tex         # Pandoc LaTeX template using the FLAM class
-│
-├── csl/
-│   └── abnt.csl         # ABNT citation style (CSL format, bundled in image)
 │
 ├── latex/
 │   └── flam.cls         # Custom LaTeX class (inherits abntex2)
@@ -133,7 +139,7 @@ year: "2026"
 Neste artigo...[@aquino1265]
 ```
 
-The `.bib` file is uploaded alongside the `.md` and passed to Pandoc via `--bibliography`. Pandoc citeproc resolves all `[@key]` references using the bundled ABNT CSL file before the LaTeX step.
+The `.bib` file is uploaded alongside the `.md`. Pandoc passes it via `--bibliography` so it knows about the entries, but with `--natbib` it does not resolve citations — they are passed through as `\cite{key}` for abntex2cite to resolve during the BibTeX compile step.
 
 ---
 
@@ -159,7 +165,7 @@ The `.bib` file is uploaded alongside the `.md` and passed to Pandoc via `--bibl
 
 **Validation:**
 - If `md_file` is missing: HTTP 422 with message "Markdown file is required"
-- If `bib_file` is absent but the document contains `[@key]` citations: Pandoc will emit a warning and references will appear as `[?]`; this is not treated as an error by the server (students can discover this through the output)
+- If `bib_file` is absent but the document contains `[@key]` citations: BibTeX will fail to resolve references and xelatex will render them as `[?]`; the server will not treat this as a hard error but the output will clearly show unresolved citations
 - No file-type enforcement beyond the field names; malformed files will fail at the Pandoc/xelatex step and surface as HTTP 422
 
 The form is served statically at `GET /` from `web/index.html`.
@@ -206,9 +212,9 @@ All paths are relative to the directory where the script is run (mounted as `/da
 
 ## Error Handling
 
-- Subprocess return codes are checked after every Pandoc and xelatex call.
+- Subprocess return codes are checked after every Pandoc, xelatex, and bibtex call.
 - On failure, stderr is captured and surfaced:
-  - Web: HTTP 422 with the relevant log excerpt
+  - Web: HTTP 422 with the relevant log excerpt (from whichever step failed: Pandoc, bibtex, or xelatex)
   - CLI: non-zero exit code + stderr printed to terminal
 - Temp directories are always cleaned up via `finally` blocks regardless of success or failure.
 
