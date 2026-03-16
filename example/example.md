@@ -34,6 +34,7 @@ do conhecimento científico descontrolado.
 Quando a citação possui mais de quatro linhas, deve ser destacada do texto
 principal, conforme a norma ABNT. O trecho abaixo exemplifica esse formato:
 
+```{=latex}
 \begin{citacao}
 Nenhum ser humano poderia ter passado por uma variedade de sensações mais
 angustiantes do que as que eu senti durante aquela noite. Eu tinha trabalhado
@@ -41,8 +42,10 @@ duramente por quase dois anos, com o único propósito de infundir vida em um
 corpo inanimado. Para isso, eu havia privado a mim mesmo de descanso e saúde.
 Eu havia desejado isso com um ardor que excedia em muito a moderação; mas agora
 que eu havia terminado, a beleza do sonho havia desaparecido, e uma repulsa
-e um horror insuportáveis enchiam meu coração. \cite[p.~205]{shelley2018}
+e um horror insuportáveis enchiam meu coração.
 \end{citacao}
+```
+\cite[p.~205]{shelley2018}
 
 # Conclusão
 
