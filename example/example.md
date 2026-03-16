@@ -42,10 +42,10 @@ duramente por quase dois anos, com o único propósito de infundir vida em um
 corpo inanimado. Para isso, eu havia privado a mim mesmo de descanso e saúde.
 Eu havia desejado isso com um ardor que excedia em muito a moderação; mas agora
 que eu havia terminado, a beleza do sonho havia desaparecido, e uma repulsa
-e um horror insuportáveis enchiam meu coração.
+e um horror insuportáveis enchiam meu coração. \cite[p.205]{shelley2018}
 \end{citacao}
 ```
-\cite[p.~205]{shelley2018}
+
 
 # Conclusão
 
