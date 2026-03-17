@@ -1,4 +1,5 @@
 # ABNText
+*DISCLAIMER: this project was VIBE CODED. Almost nothing was coded by a human hand, but a human did review it and is using it daily in his own homelab.*
 
 Converte documentos Markdown para PDF no formato ABNT com estilos FLAM.
 
