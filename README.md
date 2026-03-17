@@ -70,6 +70,24 @@ cd example
 ../bin/abntext convert example.md --bib example.bib
 ```
 
+## Deploy com Docker Compose
+
+Baixe o `docker-compose.yml` e suba o serviço:
+
+```bash
+curl -O https://raw.githubusercontent.com/vibelabber/abntext/main/docker-compose.yml
+docker compose up -d
+```
+
+A imagem é baixada automaticamente do GHCR. O serviço ficará disponível em
+`http://localhost:8000` e reiniciará automaticamente com o sistema.
+
+Para atualizar:
+
+```bash
+docker compose pull && docker compose up -d
+```
+
 ## Desenvolvimento local (sem Docker)
 
 Requer [Pandoc](https://pandoc.org/installing.html) e TeX Live com abntex2
