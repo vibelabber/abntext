@@ -1,7 +1,6 @@
 services:
   abntext:
-    build: .
-    image: abntext:latest
+    image: ghcr.io/vibelabber/abntext:latest
     ports:
       - "8000:8000"
-    restart: unless-stopped
+    restart: always
